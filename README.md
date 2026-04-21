@@ -85,3 +85,60 @@
 7. Код Apache Spark трансформации данных из снежинки/звезды в отчеты в Neo4j.
 8. Код Apache Spark трансформации данных из снежинки/звезды в отчеты в MongoDB.
 9. Код Apache Spark трансформации данных из снежинки/звезды в отчеты в Valkey.
+
+---
+
+## Инструкция по запуску
+
+### Предварительные требования
+- Docker Desktop запущен
+- Порты 5432, 8123, 9000, 8888, 4040 свободны
+
+### Шаг 1 — Поднять инфраструктуру
+
+```bash
+docker compose up -d --build
+```
+
+PostgreSQL автоматически создаёт таблицы и загружает 10 CSV-файлов.
+
+Дождаться готовности:
+```bash
+docker compose logs -f
+```
+
+### Шаг 2 — Открыть Jupyter
+
+Перейти в браузере: [http://localhost:8888?token=spark](http://localhost:8888?token=spark)
+
+### Шаг 3 — Запустить ноутбуки по порядку
+
+В папке `work/` открыть и запустить (**Run All Cells**):
+
+1. `01_etl_star_schema.ipynb` — строит звёздную схему в PostgreSQL (~1–2 мин)
+2. `02_etl_clickhouse_reports.ipynb` — создаёт 6 витрин в ClickHouse (~1 мин)
+
+### Шаг 4 — Проверка через DBeaver
+
+**PostgreSQL** (`localhost:5432`, db: `petshop`, user: `postgres`, password: `postgres`):
+```sql
+SELECT count(*) FROM public.mock_data;    -- 10000
+SELECT count(*) FROM public.fact_sales;   -- 10000
+SELECT count(*) FROM public.dim_product;
+```
+
+**ClickHouse** (`localhost:8123`, driver: ClickHouse, db: `reports`):
+```sql
+SELECT * FROM reports.mart_products        ORDER BY total_revenue DESC LIMIT 10;
+SELECT * FROM reports.mart_customers       ORDER BY total_purchases DESC LIMIT 10;
+SELECT * FROM reports.mart_time            ORDER BY year, month;
+SELECT * FROM reports.mart_stores          ORDER BY total_revenue DESC LIMIT 5;
+SELECT * FROM reports.mart_suppliers       ORDER BY total_revenue DESC LIMIT 5;
+SELECT * FROM reports.mart_product_quality ORDER BY avg_rating DESC LIMIT 10;
+```
+
+### Остановка
+
+```bash
+docker compose down -v   # удалить контейнеры и тома с данными
+```
