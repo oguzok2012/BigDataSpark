@@ -115,8 +115,8 @@ docker compose logs -f
 
 В папке `work/` открыть и запустить (**Run All Cells**):
 
-1. `01_etl_star_schema.ipynb` — строит звёздную схему в PostgreSQL (~1–2 мин)
-2. `02_etl_clickhouse_reports.ipynb` — создаёт 6 витрин в ClickHouse (~1 мин)
+1. `01_etl_star_schema.ipynb` — строит звёздную схему в PostgreSQL
+2. `02_etl_clickhouse_reports.ipynb` — создаёт 6 витрин в ClickHouse 
 
 ### Шаг 4 — Проверка через DBeaver
 
