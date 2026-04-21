@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres-petshop
     ports:
-      - "5427:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - "./raw_data:/raw_data"
