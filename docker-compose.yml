@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-petshop
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres-petshop
+    ports:
+      - "5427:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - "./raw_data:/raw_data"
+      - "./migrations:/docker-entrypoint-initdb.d"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres-petshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.1-alpine
+    container_name: clickhouse
+    environment:
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - chdata:/var/lib/clickhouse
+      - "./clickhouse/init:/docker-entrypoint-initdb.d"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  jupyter:
+    build: ./spark
+    container_name: spark-jupyter
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    volumes:
+      - "./notebooks:/home/jovyan/work"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=spark
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  chdata:
